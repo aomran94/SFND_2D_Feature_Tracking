@@ -89,7 +89,7 @@ int main(int argc, const char *argv[])
         }
         else // Modern Detectors
         {
-
+            detKeypointsModern(keypoints, imgGray, detectorType, false);
         }
         //// EOF STUDENT ASSIGNMENT
 
@@ -101,7 +101,11 @@ int main(int argc, const char *argv[])
         cv::Rect vehicleRect(535, 180, 180, 150);
         if (bFocusOnVehicle)
         {
-            // ...
+            vector<cv::KeyPoint> keypointsCropped;
+            for(auto it=keypoints.begin(); it != keypoints.end(); it++)
+                if (vehicleRect.contains((*it).pt))
+                    keypointsCropped.push_back((*it));
+            keypoints = keypointsCropped;
         }
 
         //// EOF STUDENT ASSIGNMENT

@@ -125,7 +125,7 @@ void detKeypointsHarris(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool
             if (cornerResponse > minResponse) {
 
                 cv::KeyPoint keyPoint;
-                keyPoint.pt = cv::Point2f(i, j);
+                keyPoint.pt = cv::Point2f(j, i);
                 keyPoint.size = 2 * apertureSize;
                 keyPoint.response = cornerResponse;
 
