@@ -93,11 +93,108 @@ void detKeypointsShiTomasi(vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool b
     // visualize results
     if (bVis)
     {
+
         cv::Mat visImage = img.clone();
         cv::drawKeypoints(img, keypoints, visImage, cv::Scalar::all(-1), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
         string windowName = "Shi-Tomasi Corner Detector Results";
         cv::namedWindow(windowName, 6);
         imshow(windowName, visImage);
+        cv::waitKey(0);
+    }
+}
+
+void detKeypointsHarris(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool bVis=false)
+{
+    int blockSize = 4;
+    int apertureSize = 3;
+    double maxOverlap = 0.0; // max. permissible overlap between two features in %
+    int minResponse = 100;
+    double k = 0.04;
+
+    // Apply corner detection
+    double t = (double)cv::getTickCount();
+    cv::Mat dst, dst_norm, dst_norm_scaled;
+    dst = cv::Mat::zeros(img.size(), CV_32FC1);
+    cv::cornerHarris(img, dst, blockSize, apertureSize, k, cv::BORDER_DEFAULT);
+    cv::normalize(dst, dst_norm, 0, 255, cv::NORM_MINMAX, CV_32FC1, cv::Mat());
+    cv::convertScaleAbs(dst_norm, dst_norm_scaled);
+
+    for(auto i = 0; i < dst_norm.rows; i++){
+        for(auto j = 0; j < dst_norm.cols; j++){
+            int cornerResponse = (int) dst_norm.at<float>(i, j);
+            if (cornerResponse > minResponse) {
+
+                cv::KeyPoint keyPoint;
+                keyPoint.pt = cv::Point2f(i, j);
+                keyPoint.size = 2 * apertureSize;
+                keyPoint.response = cornerResponse;
+
+                bool isOverlapped = false;
+                for(auto it=keypoints.begin(); it != keypoints.end(); it++){
+                    double overlapPercentage = cv::KeyPoint::overlap(keyPoint, *it);
+                    if(overlapPercentage > maxOverlap){
+                        isOverlapped = true;
+                        if(keyPoint.response > (*it).response){
+                            *it = keyPoint;
+                            break;
+                        }
+                    }
+                }
+                if (!isOverlapped)
+                    keypoints.push_back(keyPoint);
+
+            }
+        }
+    }
+
+
+    if (bVis)
+    {
+        // Visualize the results
+        string windowName = "Harris Corner Detector Results as Response Image";
+        cv::namedWindow(windowName);
+        cv::Mat visImage = dst_norm_scaled.clone();
+        cv::drawKeypoints(dst_norm_scaled, keypoints, visImage, cv::Scalar::all(-1), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+        cv::imshow(windowName, visImage);
+        cv::waitKey(0);
+    }
+
+}
+
+void detKeypointsModern(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, std::string detectorType, bool bVis)
+{
+    if (detectorType.compare("FAST") == 0) {
+        auto fast = cv::FastFeatureDetector::create();
+        fast->detect(img, keypoints);
+    }
+    else if (detectorType.compare("BRISK") == 0) {
+        auto brisk = cv::BRISK::create();
+        brisk->detect(img, keypoints);
+    }
+    else if (detectorType.compare("ORB") == 0) {
+        auto orb = cv::ORB::create();
+        orb->detect(img, keypoints);
+    }
+    else if (detectorType.compare("AKAZE") == 0) {
+        auto akaze = cv::AKAZE::create();
+        akaze->detect(img, keypoints);
+    }
+    else if (detectorType.compare("SIFT") == 0) {
+        auto sift = cv::xfeatures2d::SIFT::create();
+        sift->detect(img, keypoints);
+    }
+    else {
+        throw invalid_argument(detectorType + " is not defined Keypoint Descriptor.");
+    }
+
+    if (bVis)
+    {
+        // Visualize the keypoints
+        string windowName = detectorType + " Keypoint Detector Visualization";
+        cv::namedWindow(windowName);
+        cv::Mat visImage = img.clone();
+        cv::drawKeypoints(img, keypoints, visImage, cv::Scalar::all(-1), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+        cv::imshow(windowName, visImage);
         cv::waitKey(0);
     }
 }
