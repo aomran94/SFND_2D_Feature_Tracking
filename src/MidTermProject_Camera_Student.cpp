@@ -6,6 +6,7 @@
 #include <vector>
 #include <cmath>
 #include <limits>
+#include <chrono>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -42,12 +43,14 @@ int main(int argc, const char *argv[])
     vector<string> detectors = {"SHITOMASI", "HARRIS", "FAST", "BRISK", "ORB", "AKAZE", "SIFT"};
     vector<string> descriptors = {"BRISK", "BRIEF", "ORB", "FREAK", "AKAZE", "SIFT"};
 
-    ofstream mp7;
-    mp7.open("../stats/mp7.csv");
-    mp7 << "Detector Type, Image No., No. of Keypoints, Neighbourhood Size" << endl;
+    ofstream mp89;
+    mp89.open("../stats/mp89.csv", std::ios_base::app);
+    mp89 << "Detector Type, Dexcriptor Type, Image No., No. of Matched Keypoints, Time Detector, Time Descriptor, Time Total" << endl;
 
     /* MAIN LOOP OVER ALL IMAGES */
     for(string kpDetector : detectors){
+    for(string kpDescriptor : descriptors){
+    if((kpDetector == "ORB" && kpDescriptor == "SIFT") || (kpDetector == "SIFT" && kpDescriptor == "ORB") || (kpDetector == "AKAZE" && kpDescriptor != "AKAZE") || (kpDetector != "AKAZE" && kpDescriptor == "AKAZE")) continue;    
     for (size_t imgIndex = 0; imgIndex <= imgEndIndex - imgStartIndex; imgIndex++)
     {
         /* LOAD IMAGE INTO BUFFER */
@@ -84,7 +87,7 @@ int main(int argc, const char *argv[])
         //// STUDENT ASSIGNMENT
         //// TASK MP.2 -> add the following keypoint detectors in file matching2D.cpp and enable string-based selection based on detectorType
         //// -> HARRIS, FAST, BRISK, ORB, AKAZE, SIFT
-
+        auto start = chrono::steady_clock::now();
         if (detectorType.compare("SHITOMASI") == 0)
         {
             detKeypointsShiTomasi(keypoints, imgGray, false);
@@ -97,6 +100,7 @@ int main(int argc, const char *argv[])
         {
             detKeypointsModern(keypoints, imgGray, detectorType, false);
         }
+        int t_detector = chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - start).count();
         //// EOF STUDENT ASSIGNMENT
 
 
@@ -118,7 +122,7 @@ int main(int argc, const char *argv[])
 
         //// EOF STUDENT ASSIGNMENT
 
-        mp7 << kpDetector << ", " << imgIndex << ", " << keypoints.size() << ", " << keypoints[0].size << endl;
+        // mp7 << kpDetector << ", " << imgIndex << ", " << keypoints.size() << ", " << keypoints[0].size << endl;
 
         // optional : limit number of keypoints (helpful for debugging and learning)
         bool bLimitKpts = false;
@@ -143,10 +147,11 @@ int main(int argc, const char *argv[])
         //// STUDENT ASSIGNMENT
         //// TASK MP.4 -> add the following descriptors in file matching2D.cpp and enable string-based selection based on descriptorType
         //// -> BRIEF, ORB, FREAK, AKAZE, SIFT
-
+        start = chrono::steady_clock::now();
         cv::Mat descriptors;
-        string descriptorType = "BRISK"; // BRIEF, ORB, FREAK, AKAZE, SIFT
+        string descriptorType = kpDescriptor; // BRIEF, ORB, FREAK, AKAZE, SIFT
         descKeypoints((dataBuffer.end() - 1)->keypoints, (dataBuffer.end() - 1)->cameraImg, descriptors, descriptorType);
+        int t_descriptor = chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - start).count();
         //// EOF STUDENT ASSIGNMENT
 
         // push descriptors for current frame to end of data buffer
@@ -161,8 +166,8 @@ int main(int argc, const char *argv[])
 
             vector<cv::DMatch> matches;
             string matcherType = "MAT_BF";        // MAT_BF, MAT_FLANN
-            string descriptorType = "DES_BINARY"; // DES_BINARY, DES_HOG
-            string selectorType = "SEL_NN";       // SEL_NN, SEL_KNN
+            string descriptorType = (kpDescriptor.compare("SIFT")==0)?"DES_HOG":"DES_BINARY"; // DES_BINARY, DES_HOG
+            string selectorType = "SEL_KNN";       // SEL_NN, SEL_KNN
 
             //// STUDENT ASSIGNMENT
             //// TASK MP.5 -> add FLANN matching in file matching2D.cpp
@@ -176,6 +181,8 @@ int main(int argc, const char *argv[])
 
             // store matches in current data frame
             (dataBuffer.end() - 1)->kptMatches = matches;
+
+            mp89 << kpDetector << ", " << kpDescriptor << ", " << imgIndex << ", " << matches.size() << ", " << t_detector << ", " << t_descriptor << ", " << (t_detector+t_descriptor) << endl;
 
             cout << "#4 : MATCH KEYPOINT DESCRIPTORS done" << endl;
             
@@ -194,15 +201,17 @@ int main(int argc, const char *argv[])
                 cv::namedWindow(windowName, 7);
                 cv::imshow(windowName, matchImg);
                 cout << "Press key to continue to next image" << endl;
-                cv::waitKey(0); // wait for key to be pressed
+                //cv::waitKey(0); // wait for key to be pressed
             }
             bVis = false;
         }
 
 
     } // eof loop over all images
+    dataBuffer.clear();
     }
-    mp7.close();
+    }
+    mp89.close();
 
     return 0;
 }
