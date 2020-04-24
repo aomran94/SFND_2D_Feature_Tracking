@@ -39,9 +39,15 @@ int main(int argc, const char *argv[])
     int dataBufferSize = 2;       // no. of images which are held in memory (ring buffer) at the same time
     vector<DataFrame> dataBuffer; // list of data frames which are held in memory at the same time
     bool bVis = false;            // visualize results
+    vector<string> detectors = {"SHITOMASI", "HARRIS", "FAST", "BRISK", "ORB", "AKAZE", "SIFT"};
+    vector<string> descriptors = {"BRISK", "BRIEF", "ORB", "FREAK", "AKAZE", "SIFT"};
+
+    ofstream mp7;
+    mp7.open("../stats/mp7.csv");
+    mp7 << "Detector Type, Image No., No. of Keypoints, Neighbourhood Size" << endl;
 
     /* MAIN LOOP OVER ALL IMAGES */
-
+    for(string kpDetector : detectors){
     for (size_t imgIndex = 0; imgIndex <= imgEndIndex - imgStartIndex; imgIndex++)
     {
         /* LOAD IMAGE INTO BUFFER */
@@ -73,7 +79,7 @@ int main(int argc, const char *argv[])
 
         // extract 2D keypoints from current image
         vector<cv::KeyPoint> keypoints; // create empty feature list for current image
-        string detectorType = "SHITOMASI";
+        string detectorType = kpDetector;
 
         //// STUDENT ASSIGNMENT
         //// TASK MP.2 -> add the following keypoint detectors in file matching2D.cpp and enable string-based selection based on detectorType
@@ -93,6 +99,8 @@ int main(int argc, const char *argv[])
         }
         //// EOF STUDENT ASSIGNMENT
 
+
+
         //// STUDENT ASSIGNMENT
         //// TASK MP.3 -> only keep keypoints on the preceding vehicle
 
@@ -109,6 +117,8 @@ int main(int argc, const char *argv[])
         }
 
         //// EOF STUDENT ASSIGNMENT
+
+        mp7 << kpDetector << ", " << imgIndex << ", " << keypoints.size() << ", " << keypoints[0].size << endl;
 
         // optional : limit number of keypoints (helpful for debugging and learning)
         bool bLimitKpts = false;
@@ -168,7 +178,7 @@ int main(int argc, const char *argv[])
             (dataBuffer.end() - 1)->kptMatches = matches;
 
             cout << "#4 : MATCH KEYPOINT DESCRIPTORS done" << endl;
-
+            
             // visualize matches between current and previous image
             bVis = true;
             if (bVis)
@@ -189,7 +199,10 @@ int main(int argc, const char *argv[])
             bVis = false;
         }
 
+
     } // eof loop over all images
+    }
+    mp7.close();
 
     return 0;
 }
