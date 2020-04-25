@@ -63,17 +63,24 @@ In the same previously mentioned function `void matchDescriptors`, matched keypo
 
 Results in `stats/mp7.csv`.
 
+<img src="images/mp7.png" />
+
 `FAST` is the best detector with keypoints ~400 consistently.
+
 
 ## MP.8 Performance Evaluation 2
 
 Results in `stats/mp89.csv`.
+
+<img src="images/mp891.png" />
 
 `FAST` detector with `BRIEF` descriptor is the best pair in terms of no. of matchings (~320).
 
 ## MP.9 Performance Evaluation 3
 
 Results in `stats/mp89.csv`.
+
+<img src="images/mp891.png" />
 
 `FAST` detector with `BRIEF` descriptor is the best pair in terms of time total (~5 ms).
 
