@@ -32,3 +32,48 @@ See the classroom instruction and code comments for more details on each of thes
 2. Make a build directory in the top level directory: `mkdir build && cd build`
 3. Compile: `cmake .. && make`
 4. Run it: `./2D_feature_tracking`.
+
+# MP.0 Mid-Term Report
+
+## MP.1 Data Buffer Optimization
+
+This task was achieved by a repeated check on the dataBuffer size and removing element from its beginning for each new element added if it exceeds the given limit.
+
+## MP.2 Keypoint Detection
+
+Implementation for the seven Keypoint detectors `{"SHITOMASI", "HARRIS", "FAST", "BRISK", "ORB", "AKAZE", "SIFT"}` is located in `matching2D_Student.cpp` in three functions `void detKeypointsShiTomasi`, `void detKeypointsHarris`, and `void detKeypointsModern`.
+
+## MP.3 Keypoint Removal
+
+This is done by checking on all keypoints if they lie within the coordinate boundaries of a given rectangle. Lines `112-121` of `MidtermProject_Camera_Student.cpp`.
+
+## MP.4 Keypoint Descriptors
+
+Implemented in function `void descKeypoints` in `matching2D_Student.cpp`.
+
+## MP.5 Descriptor Matching
+
+Implemented in function `void matchDescriptors` in `matching2D_Student.cpp`. First step we configure the matcher object to Bruteforce `MAT_BF` or flann matcher `MAT_FLANN`. 
+
+## MP.6 Descriptor Distance Ratio
+
+In the same previously mentioned function `void matchDescriptors`, matched keypoint pairs are filtered to include only whose distance ratio <0.8.
+
+## MP.7 Performance Evaluation 1
+
+Results in `stats/mp7.csv`.
+
+`FAST` is the best detector with keypoints ~400 consistently.
+
+## MP.8 Performance Evaluation 2
+
+Results in `stats/mp89.csv`.
+
+`FAST` detector with `BRIEF` descriptor is the best pair in terms of no. of matchings (~320).
+
+## MP.9 Performance Evaluation 3
+
+Results in `stats/mp89.csv`.
+
+`FAST` detector with `BRIEF` descriptor is the best pair in terms of time total (~5 ms).
+
